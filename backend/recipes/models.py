@@ -156,6 +156,7 @@ class Favourites(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='favourite_recipe'
     )
 
     class Meta:

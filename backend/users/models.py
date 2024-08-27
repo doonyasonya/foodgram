@@ -55,7 +55,7 @@ class FoodgramFollow(models.Model):
     user = models.ForeignKey(
         FoodgramUser,
         on_delete=models.CASCADE,
-        related_name='users',
+        related_name='followers',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
