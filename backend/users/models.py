@@ -38,12 +38,13 @@ class FoodgramUser(AbstractUser):
         blank=True
     )
 
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
     class Meta:
         ordering = ['email']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [models.UniqueConstraint(
+            fields=['username', 'email'], name='unigue_together')
+        ]
 
     def __str__(self):
         return self.username

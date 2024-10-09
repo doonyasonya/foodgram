@@ -136,9 +136,11 @@ class ShopCart(models.Model):
     )
 
     class Meta:
-        abstract = True
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
+        constraints = [models.UniqueConstraint(
+            fields=['author', 'recipe'], name='unigue_shopping_cart')
+        ]
 
     def __str__(self):
         return f'{self.author} добавил: {self.recipe}'
@@ -151,6 +153,7 @@ class Favourites(models.Model):
         FoodgramUser,
         on_delete=models.CASCADE,
         verbose_name='Автор',
+        related_name='favourite_user'
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -160,9 +163,11 @@ class Favourites(models.Model):
     )
 
     class Meta:
-        abstract = True
         verbose_name = 'Избранные рецепты'
         verbose_name_plural = 'Избранные рецепты'
+        constraints = [models.UniqueConstraint(
+            fields=['author', 'recipe'], name='unigue_favorite')
+        ]
 
     def __str__(self):
         return self.recipe

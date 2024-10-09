@@ -42,8 +42,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'image',
         'text',
-        'ingredients',
-        'tags',
         'cooking_time',
         'pub_date',
         'favourites'
@@ -53,7 +51,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'tags',
     )
-    readonly_fields = ('favourites')
+    readonly_fields = ('favourites',)
 
     @admin.display(description='Количество в избранном')
     def favourites(self, obj):
