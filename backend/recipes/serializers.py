@@ -152,7 +152,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         user = self.context["request"].user
         return (
-            user.is_authenticated 
+            user.is_authenticated
             and user.favorites.filter(recipe=obj).exists()
         )
 

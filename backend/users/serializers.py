@@ -80,8 +80,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get("request")
         return (
-            request and request.user.is_authenticated and 
-            Subscription.objects.filter(
+            request and request.user.is_authenticated
+            and Subscription.objects.filter(
                 user=request.user, subscribed_to=obj
             ).exists()
         )
