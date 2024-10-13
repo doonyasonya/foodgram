@@ -9,7 +9,7 @@ services:
     container_name: foodgram-proxy
     image: nginx:1.25.4-alpine
     ports:
-      - "9000:80"
+      - "80:80"
     depends_on:
       - django
     volumes:
