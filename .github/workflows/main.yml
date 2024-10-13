@@ -93,7 +93,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend/
-          npm ci --legacy-peer-deps
+          npm install --legacy-peer-deps
 
   build_and_push_frontend:
     name: Push Frontend Docker Image to DockerHub
