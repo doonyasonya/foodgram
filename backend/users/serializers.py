@@ -25,8 +25,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get("request")
-        if request and hasattr(request, "user") and request.user.is_authenticated:
-            return Subscription.objects.filter(user=request.user, subscribed_to=obj).exists()
+        if request and hasattr(
+            request, "user"
+        ) and request.user.is_authenticated:
+            return Subscription.objects.filter(
+                user=request.user, subscribed_to=obj
+            ).exists()
         return False
 
 
@@ -77,7 +81,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return (
             request and request.user.is_authenticated and 
-            Subscription.objects.filter(user=request.user, subscribed_to=obj).exists()
+            Subscription.objects.filter(
+                user=request.user, subscribed_to=obj
+            ).exists()
         )
 
     def get_avatar(self, obj):
@@ -96,7 +102,8 @@ class SetPasswordSerializer(serializers.Serializer):
             )
         if data["current_password"] == data["new_password"]:
             raise serializers.ValidationError(
-                {"new_password": "New password must be different from old password."}
+                {"new_password":
+                 "New password must be different from old password."}
             )
         return data
 

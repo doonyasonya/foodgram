@@ -79,7 +79,9 @@ class UserViewSet(APIVersionMixin, viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def me(self, request, *args, **kwargs):
-        serializer = UserDetailSerializer(request.user, context={"request": request})
+        serializer = UserDetailSerializer(
+            request.user, context={"request": request}
+        )
         return Response(serializer.data)
 
     @action(
@@ -111,8 +113,14 @@ class UserViewSet(APIVersionMixin, viewsets.ModelViewSet):
                 avatar = serializer.validated_data["avatar"]
                 user.avatar = avatar
                 user.save()
-                return Response({"avatar": user.avatar.url}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"avatar": user.avatar.url},
+                    status=status.HTTP_200_OK
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if request.method == "DELETE":
             if user.avatar and default_storage.exists(user.avatar.name):
@@ -138,14 +146,20 @@ class UserViewSet(APIVersionMixin, viewsets.ModelViewSet):
             )
 
         if request.method == "POST":
-            if Subscription.objects.filter(user=user, subscribed_to=author).exists():
+            if Subscription.objects.filter(
+                user=user,
+                subscribed_to=author
+            ).exists():
                 return Response(
                     {"errors": "You are already subscribed."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             Subscription.objects.create(user=user, subscribed_to=author)
-            serializer = SubscribeSerializer(author, context={"request": request})
+            serializer = SubscribeSerializer(
+                author,
+                context={"request": request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == "DELETE":
@@ -170,5 +184,9 @@ class UserViewSet(APIVersionMixin, viewsets.ModelViewSet):
         user = request.user
         queryset = User.objects.filter(users_subscribers__user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages, many=True, context={"request": request})
+        serializer = SubscribeSerializer(
+            pages,
+            many=True,
+            context={"request": request}
+        )
         return self.get_paginated_response(serializer.data)

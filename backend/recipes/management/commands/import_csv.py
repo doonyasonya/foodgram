@@ -29,14 +29,22 @@ class Command(BaseCommand):
         for model in self.CSV_FILES_MAP.keys():
             self.import_data(model, csv_directory)
 
-        self.stdout.write(self.style.SUCCESS("✅ All data imported successfully."))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "✅ All data imported successfully."
+            )
+        )
 
     def import_data(self, model, csv_directory):
         csv_filename = self.CSV_FILES_MAP[model]
         file_path = os.path.join(csv_directory, csv_filename)
         self.verify_file_exists(file_path)
 
-        self.stdout.write(self.style.NOTICE(f"📥 Importing data from: {file_path}..."))
+        self.stdout.write(
+            self.style.NOTICE(
+                f"📥 Importing data from: {file_path}..."
+            )
+        )
 
         with open(file_path, mode="r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
@@ -57,7 +65,8 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"✅ Imported {created_count} new records. Skipped {skipped_count} existing records."
+                    f"✅ Imported {created_count} new records. "
+                    f"Skipped {skipped_count} existing records."
                 )
             )
 

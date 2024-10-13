@@ -4,7 +4,10 @@ from .constants import MAX_LENGTH_NAME
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=MAX_LENGTH_NAME, verbose_name="Название")
+    name = models.CharField(
+        max_length=MAX_LENGTH_NAME,
+        verbose_name="Название"
+    )
     slug = models.SlugField(unique=True, verbose_name="Слаг")
 
     class Meta:

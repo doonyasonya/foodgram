@@ -57,7 +57,9 @@ class Favorite(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "recipe"], name="unique_favorite")
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_favorite"
+            )
         ]
         verbose_name = "Избранное"
         verbose_name_plural = "Избранные"
@@ -94,7 +96,10 @@ class ShoppingCart(models.Model):
 
 
 class Recipe(models.Model):
-    name = models.CharField(max_length=RECIPE_NAME_MAX_LENGTH, verbose_name="Имя")
+    name = models.CharField(
+        max_length=RECIPE_NAME_MAX_LENGTH,
+        verbose_name="Имя"
+    )
     text = models.TextField(verbose_name="Текст")
     author = models.ForeignKey(
         User,
@@ -102,8 +107,15 @@ class Recipe(models.Model):
         related_name="recipes",
         verbose_name="Автор",
     )
-    image = models.ImageField(upload_to="recipes/images/", verbose_name="Изображение")
-    tags = models.ManyToManyField(Tag, related_name="recipes", verbose_name="Тэги")
+    image = models.ImageField(
+        upload_to="recipes/images/",
+        verbose_name="Изображение"
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="recipes",
+        verbose_name="Тэги"
+    )
     ingredients = models.ManyToManyField(
         Ingredient, through="RecipeIngredient", verbose_name="Ингридиенты"
     )
@@ -112,11 +124,15 @@ class Recipe(models.Model):
         validators=[
             MaxValueValidator(
                 MAX_COOKING_TIME,
-                message=f"Время должно быть не больше" f" {MAX_COOKING_TIME} минут",
+                message=(
+                    f"Время должно быть не больше {MAX_COOKING_TIME} минут",
+                )
             ),
             MinValueValidator(
                 MIN_COOKING_TIME,
-                message=f"Время должно быть не меньше" f" {MIN_COOKING_TIME} минуты",
+                message=(
+                    f"Время должно быть не меньше {MIN_COOKING_TIME} минуты",
+                )
             ),
         ],
     )
@@ -133,7 +149,11 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, verbose_name="Рецепт")
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт"
+    )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,

@@ -14,7 +14,10 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 
@@ -73,19 +76,26 @@ class RecipeViewSet(APIVersionMixin, viewsets.ModelViewSet):
                 long_url=long_link, short_code=code_generator()
             )
         return Response(
-            {"short-link": f"/s/{short_link.short_code}"}, status=status.HTTP_200_OK
+            {"short-link": f"/s/{short_link.short_code}"},
+            status=status.HTTP_200_OK
         )
 
     def _handle_post_request(self, request, pk, model, serializer_class):
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
-        instance, created = model.objects.get_or_create(user=user, recipe=recipe)
+        instance, created = model.objects.get_or_create(
+            user=user,
+            recipe=recipe
+        )
         serializer = serializer_class(instance)
         response = serializer.data
         return Response(
             response,
-            status=(status.HTTP_201_CREATED if created else HTTPStatus.BAD_REQUEST),
+            status=(
+                status.HTTP_201_CREATED
+                if created else HTTPStatus.BAD_REQUEST
+            ),
         )
 
     def _handle_delete_request(self, request, pk, model):
@@ -127,7 +137,11 @@ class RecipeViewSet(APIVersionMixin, viewsets.ModelViewSet):
         elements = self._generate_shopping_list_elements(request.user)
         self._build_pdf(buffer, elements)
         buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename="shopping_cart.pdf")
+        return FileResponse(
+            buffer,
+            as_attachment=True,
+            filename="shopping_cart.pdf"
+        )
 
     def _generate_shopping_list_elements(self, user):
         ingredients = self._get_aggregated_ingredients(user)
@@ -138,16 +152,25 @@ class RecipeViewSet(APIVersionMixin, viewsets.ModelViewSet):
         if ingredients:
             elements.append(Paragraph("Список покупок:", styles["Normal"]))
             elements.append(Spacer(1, 12))
-            elements.extend(self._create_ingredient_paragraphs(ingredients, styles))
+            elements.extend(
+                self._create_ingredient_paragraphs(
+                    ingredients,
+                    styles
+                )
+            )
         else:
-            elements.append(Paragraph("Список покупок пуст!", styles["Normal"]))
+            elements.append(
+                Paragraph("Список покупок пуст!", styles["Normal"])
+            )
 
         return elements
 
     def _get_aggregated_ingredients(self, user):
         return (
             RecipeIngredient.objects.filter(
-                recipe__in=user.recipes_shopping_cart.values_list("recipe", flat=True)
+                recipe__in=user.recipes_shopping_cart.values_list(
+                    "recipe", flat=True
+                )
             )
             .values("ingredient__name", "ingredient__measurement_unit")
             .annotate(total_amount=Sum("amount"))
@@ -159,9 +182,12 @@ class RecipeViewSet(APIVersionMixin, viewsets.ModelViewSet):
         for i, ingredient in enumerate(ingredients, start=1):
             text = (
                 f'{i}. {ingredient["ingredient__name"]} - '
-                f'{ingredient["total_amount"]} {ingredient["ingredient__measurement_unit"]}.'
+                f'{ingredient["total_amount"]} '
+                f'{ingredient["ingredient__measurement_unit"]}.'
             )
-            paragraphs.extend([Paragraph(text, styles["Normal"]), Spacer(1, 12)])
+            paragraphs.extend(
+                [Paragraph(text, styles["Normal"]), Spacer(1, 12)]
+            )
         return paragraphs
 
     def _build_pdf(self, buffer, elements):

@@ -10,6 +10,9 @@ class ImageBaseField(serializers.ImageField):
             header, base64_data = data.split(";base64,")
             extension = header.split("/")[-1]
             unique_name = f"{uuid.uuid4()}.{extension}"
-            decoded_file = ContentFile(base64.b64decode(base64_data), name=unique_name)
+            decoded_file = ContentFile(
+                base64.b64decode(base64_data),
+                name=unique_name
+            )
             data = decoded_file
         return super().to_internal_value(data)

@@ -8,7 +8,8 @@ from .models import Subscription, User
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        ("Personal Info", {"fields": ("first_name", "last_name", "email", "avatar")}),
+        ("Personal Info", {
+            "fields": ("first_name", "last_name", "email", "avatar")}),
         (
             "Permissions",
             {
