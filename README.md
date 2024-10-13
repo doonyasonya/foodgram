@@ -1,3 +1,4 @@
+![Main Foodgram workflow](https://github.com/doonyasonya/foodgram/actions/workflows/main.yml/badge.svg)
 
 # Инструкция по запуску проекта с Docker Compose
 
