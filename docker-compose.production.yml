@@ -1,7 +1,7 @@
 services:
   frontend:
     container_name: foodgram-front
-    image: your_nickname/foodgram_frontend:latest
+    image: doonyanikitin/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
 
@@ -29,7 +29,7 @@ services:
 
   django:
     container_name: foodgram-django
-    image: your_nickname/foodgram_backend:latest
+    image: doonyanikitin/foodgram_backend:latest
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput && python manage.py import_csv &&
