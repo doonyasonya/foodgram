@@ -134,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
+CSRF_TRUSTED_ORIGINS = ['http://130.193.34.93:9000', 'https://*']
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
