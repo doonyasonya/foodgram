@@ -16,12 +16,10 @@ class User(AbstractUser):
         'Фамилия',
         max_length=150,
     )
-    password = models.CharField(
-        'Пароль',
-        max_length=255,
-    )
     avatar = models.ImageField(
-        'Аватар'
+        'Аватар',
+        null=True,
+        blank=True,
     )
 
     USERNAME_FIELD = 'email'
@@ -29,7 +27,6 @@ class User(AbstractUser):
         'username',
         'first_name',
         'last_name',
-        'password',
     ]
 
     def __str__(self):
@@ -40,13 +37,13 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='users_subscriptions',
+        related_name='subscription_user',
         verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='users_subscribers',
+        related_name='subscription_author',
         verbose_name='Автор',
     )
 
