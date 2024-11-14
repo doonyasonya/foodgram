@@ -7,11 +7,12 @@ User = get_user_model()
 class Tag(models.Model):
     name = models.CharField(
         'Имя тэга',
-        max_length=255,
+        max_length=32,
         unique=True
     )
     slug = models.SlugField(
         'Слаг',
+        max_length=32,
         unique=True
     )
 
