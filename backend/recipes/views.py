@@ -45,7 +45,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientFilter(FilterSet):
-    name = CharFilter(field_name="name", lookup_expr="istartswith")
+    name = CharFilter(field_name='name', lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient

@@ -1,7 +1,8 @@
-# import base64
+import uuid
+import base64
 
 from django.contrib.auth import get_user_model
-# from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from .models import (
@@ -12,8 +13,23 @@ from .models import (
     # FavoriteRecipe,
     # ShoppingCart,
 )
+from users.serializers import UserSerializer
 
 User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            header, base64_data = data.split(';base64,')
+            extension = header.split('/')[-1]
+            unique_name = f'{uuid.uuid4()}.{extension}'
+            decoded_file = ContentFile(
+                base64.b64decode(base64_data),
+                name=unique_name
+            )
+            data = decoded_file
+        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -68,6 +84,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
+    author = UserSerializer()
+    image = Base64ImageField()
+
     class Meta:
         model = Recipe
         fields = (
