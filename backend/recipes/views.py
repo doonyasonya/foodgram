@@ -24,7 +24,7 @@ from .serializers import (
     RecipeUpdateSerializer,
 )
 
-# from core.paginations import UsersListPagination
+from core.paginations import RecipesListPagination
 
 
 User = get_user_model()
@@ -73,6 +73,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
     ]
+    pagination_class = RecipesListPagination
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -82,6 +83,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         elif self.action in ['update', 'partial_update']:
             return RecipeUpdateSerializer
         return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(
         detail=True,

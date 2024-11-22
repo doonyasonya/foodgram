@@ -48,7 +48,6 @@ class RecipeAdmin(admin.ModelAdmin):
     )
     filter_horizontal = (
         'tags',
-        'ingredients',
     )
 
     def get_favorite_count(self, obj):

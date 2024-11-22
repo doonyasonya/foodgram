@@ -4,6 +4,7 @@ import base64
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework import fields
 
 from .models import (
     Recipe,
@@ -65,7 +66,9 @@ class RecipeFavouriteSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = IngredientSerializer(many=True)
-    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    author = UserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -84,12 +87,16 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    author = UserSerializer()
+    tags = TagSerializer(many=True, read_only=True)
+    author = UserSerializer(read_only=True)
     image = Base64ImageField()
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
         fields = (
+            'id',
             'name',
             'text',
             'cooking_time',
@@ -97,7 +104,27 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'ingredients',
             'author',
             'image',
+            'is_favorited',
+            'is_in_shopping_cart',
         )
+
+    def get_is_favorited(self, obj):
+        author = self.context['request'].user
+        return (
+            author.is_authenticated
+            and author.favorited_by.filter(
+                recipe=obj
+            )
+        ).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        author = self.context['request'].user
+        return (
+            author.is_authenticated
+            and author.shopping_cart.filter(
+                recipe=obj
+            )
+        ).exists()
 
 
 class RecipeUpdateSerializer(serializers.ModelSerializer):
