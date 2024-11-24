@@ -1,8 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import FilterSet, CharFilter
+from django_filters.rest_framework import (
+    FilterSet,
+    CharFilter,
+    ModelMultipleChoiceFilter,
+    ModelChoiceFilter,
+)
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
@@ -25,6 +30,7 @@ from .serializers import (
 )
 
 from core.paginations import RecipesListPagination
+from core.permissions import IsAuthorOrReadOnly
 
 
 User = get_user_model()
@@ -54,6 +60,9 @@ class IngredientFilter(FilterSet):
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
     serializer_class = IngredientSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = IngredientFilter
@@ -68,12 +77,33 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+class RecipeFilter(FilterSet):
+    tags = ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
+        conjoined=False,
+    )
+    author = ModelChoiceFilter(
+        field_name='author',
+        queryset=User.objects.all(),
+    )
+
+    class Meta:
+        model = Recipe
+        fields = ['tags', 'author']
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [
         IsAuthenticatedOrReadOnly,
+        IsAuthorOrReadOnly,
     ]
     pagination_class = RecipesListPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = RecipeFilter
+    search_fields = ['name']
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -89,7 +119,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete',],
+        methods=['get'],
+        url_path='get-link',
+    )
+    def get_link(self, request, pk=None):
+        recipe = self.get_object()
+        short_link = self.generate_short_link(recipe.id)
+        return Response({'short-link': short_link}, status=status.HTTP_200_OK)
+
+    def generate_short_link(self, recipe_id):
+        base_url = "https://foodgram.example.org/s/"
+        short_link = f"{base_url}{recipe_id}"
+        return short_link
+
+    @action(
+        detail=True,
+        methods=['post', 'delete', 'patch'],
         permission_classes=[IsAuthenticated,],
     )
     def favorite(self, request, pk=None):

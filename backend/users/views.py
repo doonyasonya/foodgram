@@ -1,7 +1,11 @@
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 
 from .serializers import (
@@ -11,6 +15,7 @@ from .serializers import (
     PasswordSerializer
 )
 from core.paginations import UsersListPagination
+from core.permissions import IsOwnerOrReadOnly
 
 User = get_user_model()
 
@@ -19,6 +24,20 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = UsersListPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'create':
+            self.permission_classes = [AllowAny]
+        elif self.action in (
+            'me',
+            'avatar',
+            'set_password',
+        ):
+            self.permission_classes = [IsOwnerOrReadOnly]
+        else:
+            self.permission_classes = [IsAuthenticatedOrReadOnly]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         return {

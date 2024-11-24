@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from .models import Subscription
+# from .models import Subscription
 
 User = get_user_model()
 
@@ -29,12 +29,13 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        current_user = self.context['request'].user
-        if current_user.is_authenticated:
-            return Subscription.objects.filter(
-                user=current_user,
-                author=obj
-            ).exists()
+        # print(self, '123')
+        # current_user = self.context['request'].user
+        # if current_user.is_authenticated:
+        #     return Subscription.objects.filter(
+        #         user=current_user,
+        #         author=obj
+        #     ).exists()
         return False
 
 
