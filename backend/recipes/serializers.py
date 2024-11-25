@@ -15,6 +15,7 @@ from .models import (
     # ShoppingCart,
 )
 from users.serializers import UserSerializer
+from users.models import Subscription
 
 User = get_user_model()
 
@@ -369,3 +370,24 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeSerializer(instance).data
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subscription
+        fields = ('id', 'author', 'recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        recipes = obj.author.recipes.all()[:3]
+        return RecipeFavouriteSerializer(
+            recipes,
+            many=True,
+            context=self.context
+        ).data
+
+    def get_recipes_count(self, obj):
+        return obj.author.recipes.count()

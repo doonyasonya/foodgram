@@ -8,14 +8,17 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
+from .models import Subscription
 from .serializers import (
     UserSerializer,
     UserRegisterSerializer,
     AvatarSerializer,
-    PasswordSerializer
+    PasswordSerializer,
 )
+
 from core.paginations import UsersListPagination
 from core.permissions import IsOwnerOrReadOnly
+from recipes.serializers import SubscriptionSerializer
 
 User = get_user_model()
 
@@ -99,3 +102,62 @@ class UsersViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscribe',
+    )
+    def subscribe(self, request, pk=None):
+        author = User.objects.get(id=pk)
+
+        if request.method == 'POST':
+            if Subscription.objects.filter(
+                user=request.user,
+                author=author
+            ).exists():
+                return Response(
+                    {'error': 'Already subscribed'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            subscription = Subscription.objects.create(
+                user=request.user,
+                author=author
+            )
+            serializer = SubscriptionSerializer(subscription.author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            subscription = Subscription.objects.get(
+                user=request.user,
+                author=author
+            )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscriptions'
+    )
+    def subscriptions(self, request):
+        subscriptions = Subscription.objects.filter(
+            user=request.user
+        )
+        page = self.paginate_queryset(subscriptions)
+        if page is not None:
+            serializer = SubscriptionSerializer(
+                page,
+                many=True,
+                context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+        serializer = SubscriptionSerializer(
+            subscriptions,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data)
