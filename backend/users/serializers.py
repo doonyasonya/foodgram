@@ -29,13 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        # print(self, '123')
-        # current_user = self.context['request'].user
-        # if current_user.is_authenticated:
-        #     return Subscription.objects.filter(
-        #         user=current_user,
-        #         author=obj
-        #     ).exists()
+        current_user = self.context['request'].user
+        if current_user.is_authenticated:
+            return Subscription.objects.filter(
+                user=current_user,
+                author=obj
+            ).exists()
         return False
 
 

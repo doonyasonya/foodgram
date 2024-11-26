@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -18,7 +19,7 @@ from .serializers import (
 
 from core.paginations import UsersListPagination
 from core.permissions import IsOwnerOrReadOnly
-from recipes.serializers import SubscriptionSerializer
+from recipes.serializers import SubscribeSerializer
 
 User = get_user_model()
 
@@ -110,7 +111,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         url_path='subscribe',
     )
     def subscribe(self, request, pk=None):
-        author = User.objects.get(id=pk)
+        author = get_object_or_404(User, pk=pk)
 
         if request.method == 'POST':
             if Subscription.objects.filter(
@@ -118,7 +119,12 @@ class UsersViewSet(viewsets.ModelViewSet):
                 author=author
             ).exists():
                 return Response(
-                    {'error': 'Already subscribed'},
+                    {'error': 'Уже подписан'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if request.user == author:
+                return Response(
+                    {'error': 'Нельзя подписаться на себя'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -126,16 +132,22 @@ class UsersViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 author=author
             )
-            serializer = SubscriptionSerializer(subscription.author)
+            serializer = SubscribeSerializer(
+                subscription.author,
+                context={'request': request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            subscription = Subscription.objects.get(
+            subscription = Subscription.objects.filter(
                 user=request.user,
                 author=author
             )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            if not subscription:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            else:
+                subscription[0].delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -144,18 +156,18 @@ class UsersViewSet(viewsets.ModelViewSet):
         url_path='subscriptions'
     )
     def subscriptions(self, request):
-        subscriptions = Subscription.objects.filter(
-            user=request.user
+        subscriptions = User.objects.filter(
+            subscription_user__user=request.user
         )
         page = self.paginate_queryset(subscriptions)
         if page is not None:
-            serializer = SubscriptionSerializer(
+            serializer = SubscribeSerializer(
                 page,
                 many=True,
                 context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
-        serializer = SubscriptionSerializer(
+        serializer = SubscribeSerializer(
             subscriptions,
             many=True,
             context={'request': request}
