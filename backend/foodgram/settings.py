@@ -125,3 +125,6 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
+
+
+CSRF_TRUSTED_ORIGINS = ['https://*']
