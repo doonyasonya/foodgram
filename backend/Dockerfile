@@ -13,8 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-RUN mkdir -p /app/static /app/media \
-    && chmod 755 /app \
-    && chmod -R 777 /app/static /app/media
-
 CMD ["gunicorn", "foodgram.wsgi:application", "--bind", "0.0.0.0:8000"]
