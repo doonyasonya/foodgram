@@ -20,6 +20,7 @@ class User(AbstractUser):
         'Аватар',
         null=True,
         blank=True,
+        upload_to='users_avatars/'
     )
 
     USERNAME_FIELD = 'email'

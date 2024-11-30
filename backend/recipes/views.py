@@ -145,13 +145,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path='get-link',
     )
     def get_link(self, request, pk=None):
-        recipe = self.get_object()
-        short_link = self.generate_short_link(recipe.id)
+        short_link = self.generate_short_link(request, pk)
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
-    def generate_short_link(self, recipe_id):
-        base_url = "https://foodgram.example.org/s/"
-        short_link = f"{base_url}{recipe_id}"
+    def generate_short_link(self, request, recipe_id):
+        base_url = request.build_absolute_uri('/')
+        short_link = f'{base_url}recipes/{recipe_id}/'
         return short_link
 
     @action(

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -7,9 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-cqm6*v=(f1w3+akak0!7s#03itiphj6y2^c@f)&g39^c*-j1*#'
 
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
@@ -60,10 +61,22 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'your_database_name'),
+        'USER': os.environ.get('POSTGRES_USER', 'your_username'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'your_password'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': '5432',
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -91,7 +104,11 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -11,8 +11,6 @@ from .models import (
     Tag,
     Ingredient,
     RecipeIngredient,
-    # FavoriteRecipe,
-    # ShoppingCart,
 )
 from users.serializers import UserSerializer
 from users.models import Subscription
@@ -205,25 +203,28 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('recipeingredient_set', [])
         tags_data = validated_data.pop('tags', [])
         validated_data['author'] = self.context['request'].user
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags_data)
 
         if not ingredients_data:
             raise ValidationError('Нет ингредиентов')
 
-        ingredients_to_create = []
         for data in ingredients_data:
-            ingredient = RecipeIngredient(
+            amount = data.get('amount', 0)
+            if amount < 1:
+                raise ValidationError(
+                    {'amount': 'Количество должно быть больше 0'}
+                )
+
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags_data)
+
+        ingredients_to_create = [
+            RecipeIngredient(
                 recipe=recipe,
                 ingredient=data.pop('ingredient'),
                 **data
             )
-            if ingredient.amount < 1:
-                raise ValidationError(
-                    {'amount': 'Количество должно быть больше 0'}
-                )
-            ingredient.full_clean()
-            ingredients_to_create.append(ingredient)
+            for data in ingredients_data
+        ]
 
         RecipeIngredient.objects.bulk_create(ingredients_to_create)
         return recipe
@@ -320,9 +321,6 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('recipeingredient_set', [])
         tags_data = validated_data.pop('tags', [])
-        validated_data['author'] = self.context['request'].user
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags_data)
 
         if not ingredients_data:
             raise ValidationError('Нет ингредиентов')
@@ -332,19 +330,22 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         instance.tags.set(tags_data)
         instance.ingredients.clear()
+
         ingredients_to_create = []
         for data in ingredients_data:
-            ingredient = RecipeIngredient(
-                recipe=recipe,
-                ingredient=data.pop('ingredient'),
-                **data
-            )
-            if ingredient.amount < 1:
+            ingredient = data.pop('ingredient')
+            amount = data.get('amount')
+            if amount < 1:
                 raise ValidationError(
                     {'amount': 'Количество должно быть больше 0'}
                 )
-            ingredient.full_clean()
-            ingredients_to_create.append(ingredient)
+            new_ingredient = RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient,
+                amount=amount
+            )
+            new_ingredient.full_clean()
+            ingredients_to_create.append(new_ingredient)
 
         RecipeIngredient.objects.bulk_create(ingredients_to_create)
         return instance
@@ -369,33 +370,6 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeSerializer(instance, context=self.context).data
-
-
-# class SubscriptionSerializer(serializers.ModelSerializer):
-#     author = UserSerializer(read_only=True)
-#     recipes = serializers.SerializerMethodField()
-#     recipes_count = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Subscription
-#         fields = (
-#             'id',
-#             'author',
-#             'recipes',
-#             'recipes_count'
-#         )
-
-#     def get_recipes(self, obj):
-#         print(type(obj))
-#         recipes = Recipe.objects.filter(author=obj.author)
-#         return RecipeFavouriteSerializer(
-#             recipes,
-#             many=True,
-#             context=self.context
-#         ).data
-
-#     def get_recipes_count(self, obj):
-#         return obj.author.recipes.count()
 
 
 class SubscribeSerializer(serializers.ModelSerializer):

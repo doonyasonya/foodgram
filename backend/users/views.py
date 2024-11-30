@@ -82,7 +82,7 @@ class UsersViewSet(viewsets.ModelViewSet):
             )
             serializer.is_valid(raise_exception=True)
             avatar_url = serializer.save()
-            return Response({"avatar": avatar_url}, status=status.HTTP_200_OK)
+            return Response({'avatar': avatar_url}, status=status.HTTP_200_OK)
 
         if request.method == 'DELETE':
             user = request.user
@@ -157,7 +157,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     )
     def subscriptions(self, request):
         subscriptions = User.objects.filter(
-            subscription_user__user=request.user
+            subscription_author__user=request.user
         )
         page = self.paginate_queryset(subscriptions)
         if page is not None:

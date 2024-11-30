@@ -55,7 +55,8 @@ class Recipe(models.Model):
         max_length=255
     )
     image = models.ImageField(
-        'Изображение'
+        'Изображение',
+        upload_to='recipes_images/'
     )
     text = models.TextField(
         'Описание рецепта'
@@ -78,6 +79,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ['-id']
 
     def __str__(self):
         return self.name
