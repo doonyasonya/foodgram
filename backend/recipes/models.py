@@ -1,5 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+from core.constants import (
+    MINIMUM_VALUES,
+    MAXIMUM_VALUES,
+)
 
 User = get_user_model()
 
@@ -74,6 +80,10 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время готовки в минутах',
+        validators=[
+            MinValueValidator(MINIMUM_VALUES),
+            MaxValueValidator(MAXIMUM_VALUES),
+        ]
     )
 
     class Meta:
@@ -98,6 +108,10 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
+        validators=[
+            MinValueValidator(MINIMUM_VALUES),
+            MaxValueValidator(MAXIMUM_VALUES),
+        ]
     )
 
     class Meta:

@@ -8,8 +8,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from core.constants import (
-    MAX_INT,
-    MIN_INT,
+    MINIMUM_VALUES,
+    MAXIMUM_VALUES,
 )
 from recipes.models import (
     Recipe,
@@ -110,8 +110,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     )
     amount = serializers.IntegerField(
         validators=[
-            MinValueValidator(MIN_INT),
-            MaxValueValidator(MAX_INT),
+            MinValueValidator(MINIMUM_VALUES),
+            MaxValueValidator(MAXIMUM_VALUES),
         ]
     )
 
@@ -123,13 +123,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
             'measurement_unit',
             'amount'
         )
-
-    def validate_amount(self, value):
-        if value < MIN_INT or value > MAX_INT:
-            raise serializers.ValidationError(
-                f'Количество меньше {MIN_INT} или больше {MAX_INT}'
-            )
-        return value
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -143,8 +136,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     cooking_time = serializers.IntegerField(
         validators=[
-            MinValueValidator(MIN_INT),
-            MaxValueValidator(MAX_INT),
+            MinValueValidator(MINIMUM_VALUES),
+            MaxValueValidator(MAXIMUM_VALUES),
         ]
     )
 
@@ -181,13 +174,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             ).exists()
         )
 
-    def validate_cooking_time(self, value):
-        if value < MIN_INT or value > MAX_INT:
-            raise serializers.ValidationError(
-                f'Время готовки меньше {MIN_INT} или больше {MAX_INT}'
-            )
-        return value
-
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
@@ -202,8 +188,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
         validators=[
-            MinValueValidator(MIN_INT),
-            MaxValueValidator(MAX_INT),
+            MinValueValidator(MINIMUM_VALUES),
+            MaxValueValidator(MAXIMUM_VALUES),
         ]
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
@@ -254,13 +240,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'image': 'Необходимо предоставить изображение'}
             )
-
-    def validate_cooking_time(self, value):
-        if value < MIN_INT or value > MAX_INT:
-            raise serializers.ValidationError(
-                f'Время готовки меньше {MIN_INT} или больше {MAX_INT}'
-            )
-        return value
 
     def validate_ingredients(self, ingredients_data):
         if not ingredients_data:
