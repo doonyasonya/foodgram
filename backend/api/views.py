@@ -1,6 +1,6 @@
 import csv
 from django.http import HttpResponse
-from django.db.models import Count
+from django.db.models import Count, Sum, F
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import (
@@ -26,7 +26,6 @@ from .serializers import (
     RecipeSerializer,
     RecipeFavouriteSerializer,
     RecipeCreateSerializer,
-    RecipeUpdateSerializer,
     SubscribeSerializer,
     UserSerializer,
     UserRegisterSerializer,
@@ -146,10 +145,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
             return RecipeSerializer
-        elif self.action == 'create':
+        if self.action in ['create', 'update', 'partial_update']:
             return RecipeCreateSerializer
-        elif self.action in ['update', 'partial_update']:
-            return RecipeUpdateSerializer
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
@@ -226,29 +223,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        shopping_cart_items = ShoppingCart.objects.filter(user=user)
-        ingredients_data = {}
-        for cart_item in shopping_cart_items:
-            recipe = cart_item.recipe
-            for recipe_ingredient in recipe.recipeingredient_set.all():
-                ingredient = recipe_ingredient.ingredient
-                amount = recipe_ingredient.amount
-                if ingredient in ingredients_data:
-                    ingredients_data[ingredient] += amount
-                else:
-                    ingredients_data[ingredient] = amount
+
+        ingredients_data = (
+            ShoppingCart.objects.filter(user=user)
+            .values(
+                ingredient_name=F(
+                    'recipe__recipeingredient__ingredient__name'
+                ),
+                measurement_unit=F(
+                    'recipe__recipeingredient__ingredient__measurement_unit'
+                ),
+            )
+            .annotate(total_amount=Sum('recipe__recipeingredient__amount'))
+            .order_by('ingredient_name')
+        )
+
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.csv"'
         )
         writer = csv.writer(response)
         writer.writerow(['Ингредиент', 'Количество', 'Единица измерения'])
-        for ingredient, amount in ingredients_data.items():
+
+        for ingredient in ingredients_data:
             writer.writerow([
-                ingredient.name,
-                amount,
-                ingredient.measurement_unit
+                ingredient['ingredient_name'],
+                ingredient['total_amount'],
+                ingredient['measurement_unit'],
             ])
+
         return response
 
 
@@ -278,11 +281,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
         user = serializer.save()
         data = UserRegisterSerializer(user).data
         return Response(data, status=status.HTTP_201_CREATED)
@@ -342,24 +341,13 @@ class UsersViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, pk=pk)
 
         if request.method == 'POST':
-            if Subscription.objects.filter(
-                user=request.user,
+            if request.user.subscription_user.filter(
                 author=author
             ).exists():
                 return Response(
                     {'error': 'Уже подписан'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if request.user == author:
-                return Response(
-                    {'error': 'Нельзя подписаться на себя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            subscription = Subscription.objects.create(
-                user=request.user,
-                author=author
-            )
             author = User.objects.annotate(
                 recipes_count=Count('recipes')
             ).get(pk=author.pk)
@@ -367,18 +355,22 @@ class UsersViewSet(viewsets.ModelViewSet):
                 author,
                 context={'request': request}
             )
+            serializer.validate({})
+
+            subscription = Subscription.objects.create(
+                user=request.user,
+                author=author
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            subscription = Subscription.objects.filter(
-                user=request.user,
+            subscription = request.user.subscription_user.filter(
                 author=author
             )
             if not subscription:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            else:
-                subscription[0].delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+            subscription[0].delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,

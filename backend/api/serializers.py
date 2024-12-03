@@ -258,92 +258,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(ingredients_to_create)
         return recipe
 
-    def get_is_favorited(self, obj):
-        author = self.context['request'].user
-        return (
-            author.is_authenticated
-            and author.favorited_by.filter(
-                recipe=obj
-            ).exists()
-        )
-
-    def get_is_in_shopping_cart(self, obj):
-        author = self.context['request'].user
-        return (
-            author.is_authenticated
-            and author.shopping_cart.filter(
-                recipe=obj
-            ).exists()
-        )
-
-    def to_representation(self, instance):
-        return RecipeSerializer(instance, context=self.context).data
-
-
-class RecipeUpdateSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Tag.objects.all()
-    )
-    ingredients = RecipeIngredientSerializer(
-        source='recipeingredient_set',
-        many=True
-    )
-    author = UserSerializer(read_only=True)
-    image = Base64ImageField()
-    cooking_time = serializers.IntegerField(
-        min_value=MIN_INT,
-        max_value=MAX_INT,
-    )
-    is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'text',
-            'cooking_time',
-            'tags',
-            'ingredients',
-            'author',
-            'image',
-            'is_favorited',
-            'is_in_shopping_cart',
-        )
-
-    def validate(self, data):
-        self._validate_tags(data.get('tags', []))
-        self._validate_ingredients(data.get('recipeingredient_set', []))
-        self._validate_image(data.get('image'))
-        return data
-
-    def _validate_tags(self, tags):
-        if not tags:
-            raise ValidationError(
-                {'tags': 'Поле Тег пустое'}
-            )
-
-        tag_ids = {tag.id for tag in tags}
-        if len(tags) != len(tag_ids):
-            raise ValidationError(
-                {'tags': 'Теги должны быть уникальными'}
-            )
-
-    def _validate_ingredients(self, ingredients):
-        ingredient_ids = {ing['ingredient'].id for ing in ingredients}
-        if len(ingredients) != len(ingredient_ids):
-            raise ValidationError(
-                {'ingredients': 'Ингредиенты не должны повторяться'}
-            )
-
-    def _validate_image(self, image):
-        if not image:
-            raise ValidationError(
-                {'image': 'Необходимо предоставить изображение'}
-            )
-
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('recipeingredient_set', [])
         tags_data = validated_data.pop('tags', [])
@@ -420,6 +334,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return user.is_authenticated and user.subscription_user.filter(
             author=obj
         ).exists()
+
+    def validate(self, data):
+        request = self.context['request']
+        user = request.user
+        author = self.instance
+
+        if user == author:
+            raise serializers.ValidationError('Нельзя подписаться на себя')
 
     def validate_for_delete(self, user, author):
         if not user.subscription_user.filter(
