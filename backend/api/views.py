@@ -1,5 +1,6 @@
 import csv
 from django.http import HttpResponse
+from django.db.models import Count
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import (
@@ -359,8 +360,11 @@ class UsersViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 author=author
             )
+            author = User.objects.annotate(
+                recipes_count=Count('recipes')
+            ).get(pk=author.pk)
             serializer = SubscribeSerializer(
-                subscription.author,
+                author,
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -385,7 +389,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     def subscriptions(self, request):
         subscriptions = User.objects.filter(
             subscription_author__user=request.user
-        )
+        ).annotate(recipes_count=Count('recipes'))
         page = self.paginate_queryset(subscriptions)
         if page is not None:
             serializer = SubscribeSerializer(
