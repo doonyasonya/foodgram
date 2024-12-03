@@ -72,7 +72,7 @@ class Recipe(models.Model):
         related_name='tags',
         verbose_name='Тэги'
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время готовки в минутах',
     )
 
@@ -96,7 +96,7 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
-    amount = models.PositiveIntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество',
     )
 
