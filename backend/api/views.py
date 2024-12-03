@@ -40,9 +40,7 @@ from recipes.models import (
     ShoppingCart,
     FavoriteRecipe,
 )
-
 from users.models import Subscription
-
 from core.paginations import (
     RecipesListPagination,
     UsersListPagination,
