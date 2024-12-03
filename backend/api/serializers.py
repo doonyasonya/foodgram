@@ -124,6 +124,13 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
             'amount'
         )
 
+    def validate_amount(self, value):
+        if value < MIN_INT or value > MAX_INT:
+            raise serializers.ValidationError(
+                f'Количество меньше {MIN_INT} или больше {MAX_INT}'
+            )
+        return value
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -173,6 +180,13 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe=obj
             ).exists()
         )
+
+    def validate_cooking_time(self, value):
+        if value < MIN_INT or value > MAX_INT:
+            raise serializers.ValidationError(
+                f'Время готовки меньше {MIN_INT} или больше {MAX_INT}'
+            )
+        return value
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -240,6 +254,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'image': 'Необходимо предоставить изображение'}
             )
+
+    def validate_cooking_time(self, value):
+        if value < MIN_INT or value > MAX_INT:
+            raise serializers.ValidationError(
+                f'Время готовки меньше {MIN_INT} или больше {MAX_INT}'
+            )
+        return value
 
     def validate_ingredients(self, ingredients_data):
         if not ingredients_data:
