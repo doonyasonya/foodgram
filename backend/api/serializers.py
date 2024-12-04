@@ -3,7 +3,6 @@ import base64
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -109,10 +108,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     amount = serializers.IntegerField(
-        validators=[
-            MinValueValidator(MINIMUM_VALUES),
-            MaxValueValidator(MAXIMUM_VALUES),
-        ]
+        min_value=MINIMUM_VALUES,
+        max_value=MAXIMUM_VALUES,
     )
 
     class Meta:
@@ -135,10 +132,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     cooking_time = serializers.IntegerField(
-        validators=[
-            MinValueValidator(MINIMUM_VALUES),
-            MaxValueValidator(MAXIMUM_VALUES),
-        ]
+        min_value=MINIMUM_VALUES,
+        max_value=MAXIMUM_VALUES,
     )
 
     class Meta:
@@ -187,10 +182,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
-        validators=[
-            MinValueValidator(MINIMUM_VALUES),
-            MaxValueValidator(MAXIMUM_VALUES),
-        ]
+        min_value=MINIMUM_VALUES,
+        max_value=MAXIMUM_VALUES,
     )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
